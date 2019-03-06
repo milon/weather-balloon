@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Feed;
 use App\Services\Distance;
 use App\Services\Temparature;
 use Illuminate\Console\Command;
@@ -43,50 +44,42 @@ class GenerateStatistics extends Command
      */
     public function handle()
     {
-        if(! Storage::disk('local')->exists($this->argument('filename'))) {
-            $this->error($this->argument('filename') . ' file does not exists.');
-            return;
+        $fileName = $this->argument('filename');
+        $temparatureUnit = $this->option('temparature');
+        $distanceUnit = $this->option('distance');
+
+        $tempFuncName = "to$temparatureUnit";
+        $distFuncName = "to" . ucfirst($distanceUnit);
+
+        $stats = Feed::selectRaw('region, min(temparature) as min_temp, max(temparature) as max_temp, avg(temparature) as avg_temp, 
+            sum(sqrt(distance_x*distance_x + distance_y*distance_y)) as distance')
+                ->groupBy('region')
+                ->get();
+
+        $stats = $stats->map(function ($item) use ($tempFuncName, $distFuncName){
+           return [
+               $item->region,
+               (new Temparature($item->min_temp))->{$tempFuncName}(),
+               (new Temparature($item->max_temp))->{$tempFuncName}(),
+               (new Temparature($item->avg_temp))->{$tempFuncName}(),
+               (new Distance($item->distance))->{$distFuncName}()
+           ];
+        })->all();
+
+        $header = ['Observatory', 'Minimum Temparature', 'Maximum Temparature', 'Average Temparature', 'Total Distance'];
+
+        $this->table($header, $stats);
+
+        if(Storage::exists($this->argument('filename'))) {
+            Storage::delete($this->argument('filename'));
         }
 
-        $totalRow = 0;
-        $validRow = 0;
-        $validData = [];
-
-        foreach(file(storage_path('app/' . $this->argument('filename'))) as $line) {
-            $totalRow++;
-
-            if(! empty($this->parseData($line))) {
-                $validData[] = $this->parseData($line);
-                $validRow++;
-            }
+        Storage::append($this->argument('filename'), implode(",", $header));
+        foreach ($stats as $row) {
+            Storage::append($this->argument('filename'), implode(",", $row));
         }
 
-        echo $totalRow;
-        echo $validRow;
+        $this->info("Statistics also can be found in $fileName");
     }
 
-    protected function parseData($line)
-    {
-        $data = explode('|', trim($line));
-
-        if(in_array('', $data)) {
-            return [];
-        }
-
-        return [
-            $data[3],
-            new Temparature($data[2], $data[3]),
-            $this->parseDistance($data[1], $data[3])
-        ];
-    }
-
-    protected function parseDistance($distance, $region)
-    {
-        $distance = explode(',', $distance);
-
-        return [
-            new Distance($distance[0], $region),
-            new Distance($distance[1], $region)
-        ];
-    }
 }

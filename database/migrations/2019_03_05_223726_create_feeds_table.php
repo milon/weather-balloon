@@ -15,7 +15,11 @@ class CreateFeedsTable extends Migration
     {
         Schema::create('feeds', function (Blueprint $table) {
             $table->bigIncrements('id');
-            
+            $table->string('timestamp');
+            $table->float('temparature');
+            $table->float('distance_x');
+            $table->float('distance_y');
+            $table->string('region', 5);
             $table->timestamps();
         });
     }

@@ -6,7 +6,7 @@ class Temparature
 {
     protected $temparature;
 
-    public function __construct($temparature, $region)
+    public function __construct($temparature, $region = 'AU')
     {
         $this->temparature = $this->convertToCelsius($temparature, $region);
     }
@@ -24,18 +24,31 @@ class Temparature
         return $temparature - 273.15;
     }
 
-    public function toKelvin()
+    public function toK()
     {
-        return $this->temparature + 273.15;
+        return round($this->temparature + 273.15, 2);
     }
 
-    public function toCelsius()
+    public function toC()
     {
-        return $this->temparature;
+        return round($this->temparature, 2);
     }
 
-    public function toFahrenheit()
+    public function toF()
     {
         return round(($this->temparature * 9 / 5) + 32, 2);
+    }
+
+    public function toRegion($region)
+    {
+        if($region === 'AU') {
+            return $this->toC();
+        }
+
+        if($region === 'US') {
+            return $this->toF();
+        }
+
+        return $this->toK();
     }
 }

@@ -17,7 +17,7 @@ class GenerateSeed extends Command
      */
     protected $signature = 'weather-balloon:generate
         {filename : Name of the generated file.}
-        {--lines=10 : Number of line in the file.}';
+        {--lines=1000 : Number of line in the file.}';
 
     /**
      * The console command description.
@@ -50,7 +50,11 @@ class GenerateSeed extends Command
             $feedData[] = $this->generateFeedRow();
         }
 
-        Storage::disk('local')->put($this->argument('filename'), implode("\n", $feedData));
+        if(Storage::exists($this->argument('filename'))) {
+            Storage::delete($this->argument('filename'));
+        }
+
+        Storage::append($this->argument('filename'), implode("\n", $feedData));
 
         $this->info($this->argument('filename') . ' created successfully.');
     }
@@ -60,6 +64,6 @@ class GenerateSeed extends Command
         return $this->faker->date('Y-m-d') . 'T' . $this->faker->time('H:i') .
             '|' . $this->faker->numberBetween(0, 360) . ',' . $this->faker->numberBetween(0, 360) .
             '|' . $this->faker->numberBetween(-273, 500) .
-            '|' . $this->faker->randomElement(['AU', 'US', 'FR', 'OT']);
+            '|' . $this->faker->randomElement(['AU', 'US', 'FR', 'OT', '']);
     }
 }

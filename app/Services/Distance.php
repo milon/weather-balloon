@@ -6,7 +6,7 @@ class Distance
 {
     protected $distance;
 
-    public function __construct($distance, $region)
+    public function __construct($distance, $region = 'AU')
     {
         $this->distance = $this->convertToKm($distance, $region);
     }
@@ -26,16 +26,29 @@ class Distance
 
     public function toKm()
     {
-        return $this->distance;
+        return round($this->distance, 2);
     }
 
-    public function toMeter()
+    public function toM()
     {
-        return $this->distance * 1000;
+        return round($this->distance * 1000, 2);
     }
 
     public function toMiles()
     {
-        return $this->distance / 0.62;
+        return round($this->distance / 0.62, 2);
+    }
+
+    public function toRegion($region)
+    {
+        if($region === 'US') {
+            return $this->toMiles();
+        }
+
+        if($region === 'FR') {
+            return $this->toM();
+        }
+
+        return $this->toKm();
     }
 }
