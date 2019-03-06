@@ -68,6 +68,7 @@ And this will output something like this-
 | OT          | 2359              | -546.15                | 225.85                 | -154.16                | 1053224.64            |
 | US          | 2371              | -169.44                | 260                    | 46.52                  | 1694651.45            |
 +-------------+-------------------+------------------------+------------------------+------------------------+-----------------------+
+Statistics also can be found in weather_report.csv
 ```
 
 For simplicity, we assumed all the files will be in the `storage/app` folder.
