@@ -1,71 +1,78 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+# Weather Balloon Statistics
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+This is a Laravel 5.8 application. This will analyze a log file and generate a report based on that. The whole problem specification can be found [here](weather.md). 
 
-## About Laravel
+## Setup
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This application uses MySQL as database. So make sure you have a database setup in place.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+First clone the repo, go to the project folder and then run the following commands-
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```
+composer install
+cd .env.example .env
+php artisan key:generate
+```
+Then change database credentials in .env file. Then run-
 
-## Learning Laravel
+```
+php artisan migrate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Usage
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost you and your team's skills by digging into our comprehensive video library.
+This application provides 3 artisan commands.
 
-## Laravel Sponsors
+#### weather-balloon:generate
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+You can use this to generate a dummy log file with weather data. Here is an example-
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
-- [We Are The Robots Inc.](https://watr.mx/)
-- [Understand.io](https://www.understand.io/)
-- [Abdel Elrafa](https://abdelelrafa.com)
+```
+php artisan weather-balloon:generate weather.log --lines=10000    
+```
 
-## Contributing
+This command needs the file name as argument. You can also pass how many lines you want in the log file as option. By default it will generate 1000 lines.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+#### weather-balloon:import
 
-## Security Vulnerabilities
+This command uses to import data in the database and will filter out all the invalid data. For simplicity, we assume if the observatory data is missing, it's an invalid data. This looks like this-
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+php artisan weather-balloon:import weather.log
+```
 
-## License
+And will output something like this-
 
-The Laravel framework is open-source software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+Data imported: 7956, Total Data: 10000
+```
+
+#### weather-balloon:statistics
+
+This command will generate statistics and output on a file as comma separated value as well as on the console. It took the output file name as argument. You can also pass temparature(C, F, K) and distance(m, km, miles) as options.
+
+The command looks like this-
+
+```
+php artisan weather-balloon:statistics weather_report.csv --temparature=C --distance=miles
+```
+
+And this will output something like this-
+
+```
++-------------+-------------------+------------------------+------------------------+------------------------+-----------------------+
+| Observatory | Number of Records | Minimum Temparature(C) | Maximum Temparature(C) | Average Temparature(C) | Total Distance(miles) |
++-------------+-------------------+------------------------+------------------------+------------------------+-----------------------+
+| AU          | 2428              | -273                   | 500                    | 112.13                 | 1089824.17            |
+| FR          | 2392              | -546.15                | 226.85                 | -163.6                 | 1062.36               |
+| OT          | 2359              | -546.15                | 225.85                 | -154.16                | 1053224.64            |
+| US          | 2371              | -169.44                | 260                    | 46.52                  | 1694651.45            |
++-------------+-------------------+------------------------+------------------------+------------------------+-----------------------+
+```
+
+For simplicity, we assumed all the files will be in the `storage/app` folder.
+
+## Developer
+
+Nuruzzaman Milon<br>
+contact@milon.im
