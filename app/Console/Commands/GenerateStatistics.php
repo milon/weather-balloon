@@ -51,7 +51,8 @@ class GenerateStatistics extends Command
         $tempFuncName = "to$temparatureUnit";
         $distFuncName = "to" . ucfirst($distanceUnit);
 
-        $stats = Feed::selectRaw('region, min(temparature) as min_temp, max(temparature) as max_temp, avg(temparature) as avg_temp, 
+        $stats = Feed::selectRaw('region, count(id) as count, min(temparature) as min_temp, 
+            max(temparature) as max_temp, avg(temparature) as avg_temp, 
             sum(sqrt(distance_x*distance_x + distance_y*distance_y)) as distance')
                 ->groupBy('region')
                 ->get();
@@ -59,6 +60,7 @@ class GenerateStatistics extends Command
         $stats = $stats->map(function ($item) use ($tempFuncName, $distFuncName){
            return [
                $item->region,
+               $item->count,
                (new Temparature($item->min_temp))->{$tempFuncName}(),
                (new Temparature($item->max_temp))->{$tempFuncName}(),
                (new Temparature($item->avg_temp))->{$tempFuncName}(),
@@ -66,7 +68,14 @@ class GenerateStatistics extends Command
            ];
         })->all();
 
-        $header = ['Observatory', 'Minimum Temparature', 'Maximum Temparature', 'Average Temparature', 'Total Distance'];
+        $header = [
+            'Observatory',
+            'Number of Records',
+            "Minimum Temparature($temparatureUnit)",
+            "Maximum Temparature($temparatureUnit)",
+            "Average Temparature($temparatureUnit)",
+            "Total Distance($distanceUnit)"
+        ];
 
         $this->table($header, $stats);
 
